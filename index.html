@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OpenGL basics notes</title>
+<style>:root{
+  --bg:#fbfaf7; --panel:#ffffff; --panel2:#f3f1ec; --text:#1d1f24; --muted:#5b616e; --line:#e2ded5;
+  --accent:#2f5bd3; --accent-soft:#e7edfc; --good:#1f8a4c; --good-soft:#e3f4ea; --bad:#c23a32; --bad-soft:#fbe7e5;
+  --warn:#9a6400; --warn-soft:#fff3d6; --code-bg:#f4f2ee; --kbd:#eae6de;
+  --shadow:0 1px 2px rgba(0,0,0,.05),0 4px 14px rgba(0,0,0,.04);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#14161b; --panel:#1b1e25; --panel2:#22262f; --text:#e7e9ee; --muted:#a3a9b6; --line:#2e333d;
+    --accent:#7d9cff; --accent-soft:#232c45; --good:#4cc47f; --good-soft:#18301f; --bad:#ff7b72; --bad-soft:#3a1f1e;
+    --warn:#f2c14e; --warn-soft:#352b14; --code-bg:#111318; --kbd:#2a2f39;
+    --shadow:none;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14161b; --panel:#1b1e25; --panel2:#22262f; --text:#e7e9ee; --muted:#a3a9b6; --line:#2e333d;
+  --accent:#7d9cff; --accent-soft:#232c45; --good:#4cc47f; --good-soft:#18301f; --bad:#ff7b72; --bad-soft:#3a1f1e;
+  --warn:#f2c14e; --warn-soft:#352b14; --code-bg:#111318; --kbd:#2a2f39;
+  --shadow:none;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth; scroll-padding-top:70px}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+a{color:var(--accent)}
+header.top{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+header.top .in{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+header.top .brand{font-weight:700;white-space:nowrap}
+header.top nav{display:flex;gap:4px;flex-wrap:wrap;flex:1}
+header.top nav a{text-decoration:none;color:var(--muted);padding:4px 10px;border-radius:999px;font-size:14px}
+header.top nav a.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+header.top button{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:8px;padding:4px 10px;cursor:pointer}
+.wrap{max-width:1100px;margin:0 auto;padding:0 16px 80px;display:grid;grid-template-columns:220px minmax(0,1fr);gap:32px}
+aside.toc{position:sticky;top:64px;align-self:start;max-height:calc(100vh - 80px);overflow:auto;padding-top:28px;font-size:14px}
+aside.toc b{display:block;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em;margin:14px 0 6px}
+aside.toc a{display:block;color:var(--text);text-decoration:none;padding:3px 8px;border-left:2px solid var(--line)}
+aside.toc a:hover{border-color:var(--accent);color:var(--accent)}
+main{min-width:0;padding-top:20px}
+.hero{padding:18px 0 8px}
+.hero h1{font-size:34px;line-height:1.15;margin:0 0 6px}
+.hero p{color:var(--muted);margin:0;max-width:70ch}
+.modes{display:flex;gap:8px;margin:18px 0 6px;flex-wrap:wrap}
+.modes a{text-decoration:none;border:1px solid var(--line);background:var(--panel);padding:8px 14px;border-radius:10px;color:var(--text);font-weight:600;font-size:14px;box-shadow:var(--shadow)}
+.modes a span{color:var(--muted);font-weight:400}
+h2.part{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:56px 0 0;padding-top:12px;border-top:2px solid var(--accent)}
+section.note{margin-top:28px}
+section.note h3{font-size:22px;margin:0 0 8px}
+section.note h4{font-size:17px;margin:22px 0 6px}
+p,li{max-width:76ch}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.88em;background:var(--code-bg);padding:1px 5px;border-radius:5px}
+pre{background:var(--code-bg);border:1px solid var(--line);border-radius:10px;padding:12px 14px;overflow:auto;font-size:13.5px;line-height:1.5}
+pre code{background:none;padding:0;font-size:inherit}
+.c{color:var(--muted)}
+.box{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:12px 16px;margin:14px 0;box-shadow:var(--shadow)}
+.box.idea{border-left:4px solid var(--accent)}
+.box.fix{border-left:4px solid var(--warn);background:var(--warn-soft)}
+.box.ex{border-left:4px solid var(--good)}
+.box > :first-child{margin-top:0}.box > :last-child{margin-bottom:0}
+.tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:1px 7px;border-radius:999px;vertical-align:2px;margin-right:6px}
+.tag.fix{background:var(--warn);color:var(--bg)}
+.tag.extra{background:var(--panel2);color:var(--muted);border:1px solid var(--line)}
+.tag.idea{background:var(--accent);color:var(--bg)}
+.tag.ex{background:var(--good);color:var(--bg)}
+.math{font-family:"Cambria Math","STIX Two Math","Latin Modern Math",Georgia,serif;font-size:1.08em}
+.eq{font-family:"Cambria Math","STIX Two Math",Georgia,serif;font-size:1.15em;background:var(--panel2);border-radius:10px;padding:10px 14px;margin:10px 0;overflow-x:auto;white-space:nowrap}
+.v{font-weight:700;font-style:normal}
+table{border-collapse:collapse;width:100%;margin:10px 0;font-size:14.5px}
+th,td{border:1px solid var(--line);padding:6px 9px;text-align:left;vertical-align:top}
+th{background:var(--panel2)}
+.tablewrap{overflow-x:auto}
+figure{margin:14px 0}
+figcaption{color:var(--muted);font-size:14px}
+svg text{fill:var(--text);font-family:system-ui,sans-serif}
+.demo{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:14px;margin:16px 0}
+.demo .ctl{display:flex;flex-wrap:wrap;gap:14px 20px;align-items:center;font-size:14px;margin-bottom:10px}
+.demo .ctl label{display:flex;gap:8px;align-items:center}
+.demo canvas{max-width:100%;border-radius:8px;background:#000}
+.demo .read{font-family:ui-monospace,Menlo,monospace;font-size:13px;color:var(--muted)}
+/* cheat sheet */
+.cheat{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin-top:18px}
+.card{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:12px 14px;font-size:14px;box-shadow:var(--shadow)}
+.card h4{margin:0 0 6px;font-size:14px;color:var(--accent);text-transform:uppercase;letter-spacing:.05em}
+.card ul{margin:0;padding-left:18px}.card li{margin:2px 0}
+.card pre{font-size:12.5px;padding:8px 10px;margin:6px 0}
+.printbtn{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:8px;padding:6px 12px;cursor:pointer;margin-top:12px}
+/* quiz */
+.qbar{position:sticky;top:56px;z-index:5;display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--bg);padding:10px 0;border-bottom:1px solid var(--line);margin-top:14px}
+.qbar .score{font-weight:700}
+.qbar .meter{flex:1;min-width:120px;height:8px;background:var(--panel2);border-radius:99px;overflow:hidden}
+.qbar .meter i{display:block;height:100%;width:0;background:var(--good);transition:width .25s}
+.qbar button{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:8px;padding:5px 10px;cursor:pointer}
+.q{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:14px 16px;margin:14px 0;box-shadow:var(--shadow)}
+.q .qn{font-size:12px;color:var(--muted);font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.q .qt{margin:4px 0 10px;font-weight:600}
+.q .opts{display:grid;gap:8px}
+.q .opt{text-align:left;font:inherit;font-size:15px;border:1.5px solid var(--line);background:var(--bg);color:var(--text);border-radius:10px;padding:8px 12px;cursor:pointer;display:flex;gap:10px;align-items:flex-start}
+.q .opt:hover:not([disabled]){border-color:var(--accent)}
+.q .opt .k{flex:none;width:22px;height:22px;border-radius:6px;background:var(--kbd);display:grid;place-items:center;font-size:12px;font-weight:700}
+.q .opt.right{border-color:var(--good);background:var(--good-soft)}
+.q .opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.q .opt[disabled]{cursor:default}
+.q .why{display:none;margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--panel2);font-size:14.5px}
+.q.done .why{display:block}
+.q .why b.ok{color:var(--good)}.q .why b.no{color:var(--bad)}
+.q.hide{display:none}
+footer{color:var(--muted);font-size:13px;margin-top:60px}
+@media (max-width:860px){
+  .wrap{grid-template-columns:1fr}
+  aside.toc{display:none}
+  .hero h1{font-size:28px}
+  header.top .brand{display:none}
+}
+@media print{
+  header.top,aside.toc,.modes,.qbar,.printbtn,.demo{display:none!important}
+  body{background:#fff;color:#000}
+  .wrap{display:block}
+  body.print-cheat main > *:not(#cheat){display:none!important}
+  body.print-cheat .cheat{grid-template-columns:1fr 1fr;gap:6px}
+  body.print-cheat .card{font-size:10.5px;padding:6px 8px;break-inside:avoid;box-shadow:none}
+  .q .why{display:block}
+}
+p code,li code,.card p code{overflow-wrap:anywhere}
+</style></head>
+<body>
+<header class="top"><div class="in"><span class="brand">CGV notes</span><nav><a href="index.html">All topics</a>
+<a href="1-OpenGL.html" class="on">OpenGL</a>
+<a href="2-Lighting.html">Lighting</a>
+<a href="3-Programmable-Pipeline.html">Pipeline</a>
+<a href="4-Textures.html">Textures</a></nav><button id="themeBtn" type="button">Light / dark</button></div></header>
+<div class="wrap"><aside class="toc" id="toc"></aside><main>
+<div class="hero"><h1>OpenGL basics</h1><p>Primitives, colour, drawing with arrays, occlusion and the depth test, 3D transforms and the full transformation pipeline from object space to pixels. Lecture 4 / book chapter 8.</p><div class="modes"><a href="#notes-part">Notes <span>· read</span></a><a href="#cheat">Cheat sheet <span>· revise</span></a><a href="#quiz-part">Quiz <span>· test yourself</span></a></div></div>
+<style>
+.dg line,.dg polyline,.dg polygon,.dg path{stroke:var(--accent);fill:none;stroke-width:2}
+.dg polygon.f{fill:var(--accent-soft)}
+.dg circle{fill:var(--text)}
+.dg text{font-size:12px}
+.dg text.h{font-weight:700;font-size:13px}
+.chain{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:12px 0}
+.chain span.s{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:5px 10px;font-weight:600;font-size:14px}
+.chain span.a{color:var(--muted);font-size:13px}
+</style>
+
+<h2 class="part" id="notes-part">Notes</h2>
+
+<section class="note"><h3>What OpenGL is</h3>
+<p><b>OpenGL</b> (Open Graphics Library) is a cross-language, cross-platform API for rendering 2D and 3D vector graphics. It talks to the GPU so drawing is hardware-accelerated. It is used in CAD, virtual reality, games and flight simulation.</p>
+<p><b>WebGL</b> is based on OpenGL (OpenGL ES) and is the standard way to do 3D in a web browser, which is what your labs use. Competing APIs are Direct3D (Windows), Metal (Apple) and Vulkan (the modern, lower-level successor designed by the same group behind OpenGL).</p>
+<div class="box idea"><span class="tag idea">Big picture</span> The lectures teach "old" OpenGL 1.1 calls like <code>glBegin</code>, <code>glVertex</code>, <code>glTranslatef</code> because they make the ideas easy to see. The labs use WebGL, where the same ideas are done with buffers, shaders and glMatrix (see the Programmable Pipeline page).</div>
+</section>
+
+<section class="note"><h3>GLUT: opening a window</h3>
+<p>OpenGL only draws. It can't open a window or read the mouse. <b>GLUT</b> (OpenGL Utility Toolkit) is a helper library that creates windows, handles user input and runs the main loop.</p>
+<pre><code>glutInit(&amp;argc, argv);                 <span class="c">// start GLUT, read command-line args</span>
+glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+                                       <span class="c">// GLUT_DOUBLE: draw on a hidden back buffer, then swap (no flicker)</span>
+                                       <span class="c">// GLUT_RGB:    use RGB colour</span>
+                                       <span class="c">// GLUT_DEPTH:  give me a depth buffer (needed for the depth test)</span>
+glutInitWindowSize(800, 600);          <span class="c">// 800 px wide, 600 px tall</span>
+glutCreateWindow("Orbiting Lights");   <span class="c">// make the window with this title</span>
+glClearColor(0.0, 0.0, 0.0, 1.0);      <span class="c">// background colour = opaque black</span>
+init();                                <span class="c">// your own set-up function</span>
+glutDisplayFunc(display);              <span class="c">// call display() whenever the window must be redrawn</span>
+glutReshapeFunc(reshape);              <span class="c">// call reshape() when the window is resized (fix viewport/projection)</span>
+glutIdleFunc(idle);                    <span class="c">// call idle() when nothing else is happening (animation)</span>
+glutMainLoop();                        <span class="c">// loop forever: wait for events, call the matching callback</span></code></pre>
+<p>The pattern to remember: <b>initialise, set display mode, make the window, register callbacks, enter the main loop</b>. A callback is a function you hand to GLUT so GLUT can call it later when an event happens.</p>
+</section>
+
+<section class="note"><h3>Primitives</h3>
+<p>OpenGL can only draw three kinds of thing: <b>points, lines and triangles</b>. Everything else (circles, spheres, teapots) is built out of these. A <b>vertex</b> is a point given by its coordinates (x, y, z).</p>
+<div class="tablewrap"><table>
+<tr><th>Primitive</th><th>How vertices are used</th><th>n vertices give</th></tr>
+<tr><td><code>GL_POINTS</code></td><td>Each vertex is a dot. Square by default; size with <code>glPointSize(size)</code>; <code>glEnable(GL_POINT_SMOOTH)</code> makes them round.</td><td>n points</td></tr>
+<tr><td><code>GL_LINES</code></td><td>Pairs: (v0,v1), (v2,v3), … separate segments</td><td>n/2 lines</td></tr>
+<tr><td><code>GL_LINE_STRIP</code></td><td>Joined: v0–v1–v2–… </td><td>n−1 lines</td></tr>
+<tr><td><code>GL_LINE_LOOP</code></td><td>Like a strip, plus a closing line back to v0</td><td>n lines</td></tr>
+<tr><td><code>GL_TRIANGLES</code></td><td>Groups of three: (v0,v1,v2), (v3,v4,v5), …</td><td>n/3 triangles</td></tr>
+<tr><td><code>GL_TRIANGLE_STRIP</code></td><td>Each new vertex makes a triangle with the <b>two previous</b> vertices</td><td>n−2 triangles</td></tr>
+<tr><td><code>GL_TRIANGLE_FAN</code></td><td>Each new vertex makes a triangle with the <b>previous</b> vertex and the <b>first</b> vertex</td><td>n−2 triangles</td></tr>
+</table></div>
+<figure><svg class="dg" viewBox="0 0 640 170" width="100%" style="max-width:640px" role="img" aria-label="Triangle strip and triangle fan vertex order">
+<text class="h" x="20" y="18">GL_TRIANGLE_STRIP</text>
+<polygon class="f" points="30,140 70,50 110,140"/><polygon class="f" points="70,50 110,140 150,50"/><polygon class="f" points="110,140 150,50 190,140"/><polygon class="f" points="150,50 190,140 230,50"/>
+<circle cx="30" cy="140" r="4"/><text x="22" y="160">v0</text><circle cx="70" cy="50" r="4"/><text x="62" y="40">v1</text>
+<circle cx="110" cy="140" r="4"/><text x="102" y="160">v2</text><circle cx="150" cy="50" r="4"/><text x="142" y="40">v3</text>
+<circle cx="190" cy="140" r="4"/><text x="182" y="160">v4</text><circle cx="230" cy="50" r="4"/><text x="222" y="40">v5</text>
+<text x="260" y="80">(v0,v1,v2) (v1,v2,v3)</text><text x="260" y="98">(v2,v3,v4) (v3,v4,v5)</text>
+<text class="h" x="440" y="18">GL_TRIANGLE_FAN</text>
+<polygon class="f" points="520,140 450,110 470,50"/><polygon class="f" points="520,140 470,50 550,35"/><polygon class="f" points="520,140 550,35 610,80"/>
+<circle cx="520" cy="140" r="4"/><text x="512" y="160">v0</text><circle cx="450" cy="110" r="4"/><text x="430" y="108">v1</text>
+<circle cx="470" cy="50" r="4"/><text x="450" y="45">v2</text><circle cx="550" cy="35" r="4"/><text x="555" y="30">v3</text><circle cx="610" cy="80" r="4"/><text x="614" y="78">v4</text>
+</svg><figcaption>Strip: every new vertex reuses the last two. Fan: every new vertex reuses the previous one and the centre v0. Both turn n vertices into n−2 triangles.</figcaption></figure>
+<p>In old OpenGL, vertices go between <code>glBegin</code> and <code>glEnd</code>:</p>
+<pre><code>glBegin(GL_TRIANGLES);        <span class="c">// what kind of primitive</span>
+glVertex2f(-0.7, -0.5);       <span class="c">// one call per vertex</span>
+glVertex2f( 0.7, -0.5);
+glVertex2f( 0.0,  0.7);
+glEnd();</code></pre>
+<p>There is no circle primitive, so a circle is approximated with many short lines:</p>
+<pre><code>glBegin(GL_LINE_LOOP);
+for (i = 0; i &lt; 64; i++) {
+    angle = 6.2832 * i / 64;   <span class="c">// 6.2832 = 2π, so 64 evenly spaced angles</span>
+    glVertex2f(0.5*cos(angle), 0.5*sin(angle));   <span class="c">// point on a circle of radius 0.5</span>
+}
+glEnd();</code></pre>
+<p><b>State:</b> OpenGL remembers settings (current colour, point size, whether depth testing is on…) until you change them. <code>glEnable</code> / <code>glDisable</code> switch features on and off. Features that cost extra work are off by default.</p>
+</section>
+
+<section class="note"><h3>Colour</h3>
+<p>Colours are <b>RGBA</b>: red, green, blue and alpha.</p>
+<ul>
+<li><code>glColor3f</code> / <code>glColor4f</code> take <b>floats from 0.0 to 1.0</b>.</li>
+<li><code>glColor3ub</code> / <code>glColor4ub</code> take <b>unsigned bytes from 0 to 255</b>.</li>
+</ul>
+<p>The current colour is part of the state. Each vertex takes whatever colour is current when it is specified, so you can give every vertex a different colour and OpenGL blends between them across the triangle.</p>
+<div class="box fix"><span class="tag fix">Fixed</span> Your notes said alpha 0–0.5 is transparent and 0.5–1 is opaque. Alpha is a <b>smooth scale</b>: 0 is fully transparent, 1 is fully opaque, and 0.5 is half see-through. There is no cut-off at 0.5. (Alpha only has a visible effect when blending is switched on.)</div>
+</section>
+
+<section class="note"><h3>Arrays, pointers and clearing</h3>
+<p>Calling <code>glVertex</code> once per vertex is slow. Packing data into arrays is faster:</p>
+<pre><code>float coords[] = { -0.5,-0.5,   0.5,-0.5,   0.5,0.5,   -0.5,0.5 };
+glBegin(GL_TRIANGLE_FAN);
+glVertex2fv(coords);       <span class="c">// "v" = pass a pointer: uses coords[0], coords[1]</span>
+glVertex2fv(coords + 2);   <span class="c">// coords[2], coords[3]</span>
+glVertex2fv(coords + 4);
+glVertex2fv(coords + 6);
+glEnd();</code></pre>
+<p>Better still is to hand OpenGL the whole array at once with a vertex pointer and draw it in a single call with <code>glDrawArrays</code>. That is explained properly in <a href="#s-drawarrays">glDrawArrays</a> below.</p>
+<h4>Clearing</h4>
+<p>Clear before drawing each frame, or the old frame stays on screen.</p>
+<pre><code>glClearColor(r, g, b, a);                            <span class="c">// SETS the background colour (doesn't clear)</span>
+glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  <span class="c">// actually clears colour AND depth buffers</span></code></pre>
+<div class="box fix"><span class="tag fix">Fixed</span> <code>glClearColor</code> only chooses the colour. Nothing is cleared until <code>glClear</code> is called. The <b>colour buffer</b> holds each pixel's colour; the <b>depth buffer</b> holds each pixel's depth.</div>
+</section>
+
+<section class="note"><h3>Occlusion and the depth test</h3>
+<p><b>Occlusion</b> is when one object hides another. The <b>hidden surface problem</b> is making sure surfaces that should be hidden are not drawn on top.</p>
+<h4>Painter's algorithm</h4>
+<p>Draw objects <b>from back to front</b>, like a painter, so nearer things paint over farther ones. OpenGL draws in the order of your commands, so this works if you sort. It breaks when:</p>
+<ul><li>objects <b>intersect</b> (each is partly in front of the other), unless you cut them into pieces along the intersection;</li><li>there is a <b>cycle</b> (A covers B, B covers C, C covers A);</li><li>the camera moves, so the right order keeps changing.</li></ul>
+<h4>Depth test (z-buffer)</h4>
+<p>What OpenGL really uses. A <b>depth buffer</b> the same size as the screen stores one depth value per pixel.</p>
+<ol>
+<li>Clearing sets every pixel's stored depth to the farthest value (1.0).</li>
+<li>For each new fragment, compare its depth with the stored depth for that pixel.</li>
+<li>If the new depth is <b>smaller (closer)</b>, draw the colour and store the new depth. Otherwise throw the fragment away.</li>
+</ol>
+<div class="box ex"><span class="tag ex">Worked example</span> One pixel, depth buffer cleared to 1.0. Draw red at depth 0.6: 0.6 &lt; 1.0, so red is drawn, stored depth 0.6. Draw blue at 0.8: 0.8 &gt; 0.6, so blue is discarded. Draw green at 0.3: 0.3 &lt; 0.6, so green is drawn. Final pixel: <b>green</b>, the nearest, no matter which order they were drawn.</div>
+<p>The depth test is <b>off by default</b>: turn it on with <code>glEnable(GL_DEPTH_TEST)</code> and remember to clear <code>GL_DEPTH_BUFFER_BIT</code> every frame.</p>
+<h4>Z-fighting</h4>
+<p>When two surfaces have almost the same depth, rounding errors make them flicker as they take turns "winning" the test. Fixes:</p>
+<ol>
+<li><b>More depth precision</b>: use a 24- or 32-bit depth buffer.</li>
+<li><b>Tighten near and far</b>: push the <b>near plane as far out</b> as you can and pull the <b>far plane as close in</b> as you can. Precision is spread over near…far, and a tiny near value wastes most of it.</li>
+<li><b>Polygon offset</b>: nudge one surface's depth, useful for decals and shadows lying on a surface.<br><code>glEnable(GL_POLYGON_OFFSET_FILL); glPolygonOffset(factor, units);</code></li>
+</ol>
+<div class="box fix"><span class="tag fix">Fixed</span> Your note's fix 1 showed <code>glutInitDisplayMode(GLUT_DEPTH | …)</code>. That only <i>asks for</i> a depth buffer; it doesn't raise its precision. The point is to request more bits (24 or 32).</div>
+<h4>Occlusion culling</h4>
+<p>An optimisation: skip sending objects that are completely hidden behind others, so the GPU does less work. It's about speed, not correctness (the depth test already gives the correct picture).</p>
+</section>
+
+<section class="note"><h3>3D and transforms</h3>
+<p>OpenGL uses a <b>right-handed</b> coordinate system: x to the right, y up, and z <b>out of the screen towards you</b>. The default camera sits at the origin looking down the <b>negative</b> z-axis, so things in front of the camera have negative z.</p>
+<div class="tablewrap"><table>
+<tr><th>Call</th><th>Effect</th></tr>
+<tr><td><code>glTranslatef(3,5,-7.5)</code></td><td>Moves every point (x,y,z) to (x+3, y+5, z−7.5)</td></tr>
+<tr><td><code>glScalef(2,2,2)</code></td><td>Uniform scale by 2</td></tr>
+<tr><td><code>glScalef(0.5,1,1)</code></td><td>Squash to half width in x only</td></tr>
+<tr><td><code>glScalef(-1,1,1)</code></td><td>Mirror through the yz-plane (x becomes −x)</td></tr>
+<tr><td><code>glRotatef(90,1,0,0)</code></td><td>90° about x: +y goes to +z, +z goes to −y</td></tr>
+<tr><td><code>glRotatef(-90,-1,0,0)</code></td><td>Same as above (negating both angle and axis cancels)</td></tr>
+<tr><td><code>glRotatef(90,0,1,0)</code></td><td>90° about y: +z goes to +x, +x goes to −z</td></tr>
+<tr><td><code>glRotatef(90,0,0,1)</code></td><td>90° about z: +x goes to +y, +y goes to −x</td></tr>
+<tr><td><code>glRotatef(30,1.5,2,-3)</code></td><td>30° about the line through (0,0,0) and (1.5,2,−3)</td></tr>
+</table></div>
+<p>Angles in <code>glRotatef</code> are in <b>degrees</b>, and positive means counter-clockwise when you look down the axis towards the origin (right-hand rule: thumb along the axis, fingers curl in the positive direction).</p>
+<h4>Order matters: last called, first applied</h4>
+<p>Transforms affect objects drawn <b>after</b> them, and they are applied to the object in the <b>reverse</b> of the order you wrote them.</p>
+<div class="box ex"><span class="tag ex">Worked example</span> Point (1,0,0).
+<pre><code>glTranslatef(5,0,0);
+glRotatef(90,0,0,1);
+drawPoint(1,0,0);</code></pre>
+The rotate (written last) happens first: (1,0,0) → (0,1,0). Then translate: → <b>(5,1,0)</b>.<br>Swap the two lines and you get translate first: (6,0,0), then rotate: <b>(0,6,0)</b>. Same calls, different result.</div>
+<h4>Hierarchical modelling with push and pop</h4>
+<ul>
+<li><code>glLoadIdentity()</code> resets the current matrix to "no transform".</li>
+<li><code>glPushMatrix()</code> saves a copy of the current transform on a stack.</li>
+<li><code>glPopMatrix()</code> throws away the current transform and restores the saved one.</li>
+</ul>
+<pre><code>glPushMatrix();               <span class="c">// save "car" frame</span>
+  glTranslatef(carX, 0, 0);
+  drawBody();
+  glPushMatrix();             <span class="c">// save so the wheel's moves don't leak</span>
+    glTranslatef(-1, -0.5, 0);
+    glRotatef(wheelAngle, 0,0,1);
+    drawWheel();
+  glPopMatrix();              <span class="c">// back to the car body's frame</span>
+  glPushMatrix();
+    glTranslatef( 1, -0.5, 0);
+    glRotatef(wheelAngle, 0,0,1);
+    drawWheel();
+  glPopMatrix();
+glPopMatrix();</code></pre>
+<p>Moving the car moves both wheels with it, while each wheel's spin stays local to that wheel. That is what "hierarchy" means.</p>
+</section>
+
+<section class="note"><h3>The transformation pipeline</h3>
+<p>How a vertex in your model ends up as a pixel:</p>
+<div class="chain"><span class="s">Object</span><span class="a">—M→</span><span class="s">World</span><span class="a">—V→</span><span class="s">Eye</span><span class="a">—P→</span><span class="s">Clip</span><span class="a">—÷w→</span><span class="s">NDC</span><span class="a">—viewport→</span><span class="s">Device (window)</span></div>
+<p><b>M</b> = Model (modelling) transform, <b>V</b> = View transform, <b>P</b> = Projection transform. In one line: <span class="math">p<sub>clip</sub> = P · V · M · p<sub>object</sub></span>. Clipping, the ÷w and the viewport are <b>not</b> extra 4×4 matrices.</p>
+<div class="tablewrap"><table>
+<tr><th>Space</th><th>What the coordinates mean</th><th>Got there by</th></tr>
+<tr><td>Object</td><td>The model's own coordinates, relative to its own centre</td><td>Defined by you</td></tr>
+<tr><td>World</td><td>Where the object sits in the scene, next to other objects</td><td>Modelling transform M (translate, rotate, scale)</td></tr>
+<tr><td>Eye</td><td>Relative to the camera (camera at origin, looking down −z)</td><td>Viewing transform V</td></tr>
+<tr><td>Clip</td><td>4D homogeneous (x<sub>c</sub>, y<sub>c</sub>, z<sub>c</sub>, w<sub>c</sub>); used to cut off what's outside the view</td><td>Projection transform P</td></tr>
+<tr><td>NDC</td><td>Normalised device coords, every visible point in the cube −1…1</td><td>Perspective divide (÷ w)</td></tr>
+<tr><td>Device</td><td>Pixel positions in the window</td><td>Viewport transform</td></tr>
+</table></div>
+<p>In old OpenGL, M and V are combined into one <b>ModelView</b> matrix. Moving the camera one way is the same as moving the whole world the opposite way. Camera moves have names: zoom, pan, tilt, dolly, truck, pedestal.</p>
+<h4>Projection</h4>
+<p>Projection prepares the 3D scene to be flattened onto 2D. Only what is inside the <b>view volume</b> appears; the rest is clipped.</p>
+<ul>
+<li><b>Perspective</b> (far things look smaller, like your eye): <code>glFrustum(xmin, xmax, ymin, ymax, near, far)</code>. The view volume is a truncated pyramid (a frustum).</li>
+<li><b>Orthographic</b> (size doesn't change with distance, like a technical drawing): <code>glOrtho(left, right, bottom, top, near, far)</code>. The view volume is a box.</li>
+</ul>
+<pre><code>glMatrixMode(GL_PROJECTION);   <span class="c">// edit the projection matrix</span>
+glLoadIdentity();
+glFrustum(xmin, xmax, ymin, ymax, near, far);   <span class="c">// or glOrtho(-10,10,-10,10,-10,10)</span>
+glMatrixMode(GL_MODELVIEW);    <span class="c">// switch back so later transforms move objects</span></code></pre>
+<h4>Clip coordinates (your mangled formula, fixed)</h4>
+<p>A vertex is inside the clip volume when all three hold:</p>
+<div class="eq">−w<sub>c</sub> ≤ x<sub>c</sub> ≤ w<sub>c</sub>, &nbsp; −w<sub>c</sub> ≤ y<sub>c</sub> ≤ w<sub>c</sub>, &nbsp; −w<sub>c</sub> ≤ z<sub>c</sub> ≤ w<sub>c</sub></div>
+<p>Triangles that cross the boundary are clipped (cut) to fit.</p>
+<h4>Normalised device coordinates</h4>
+<p>After clipping, divide by w (the <b>perspective divide</b>):</p>
+<div class="eq">p<sub>ndc</sub> = ( x<sub>c</sub> / w<sub>c</sub>, &nbsp; y<sub>c</sub> / w<sub>c</sub>, &nbsp; z<sub>c</sub> / w<sub>c</sub> )</div>
+<p>Every surviving vertex now has each component between −1 and 1. With perspective, w<sub>c</sub> grows with distance from the camera, so dividing by it makes far things smaller. With orthographic projection, w<sub>c</sub> = 1, so nothing shrinks. NDC doesn't depend on the window size, so the same NDC can be drawn into any size of viewport.</p>
+<h4>Device (window) coordinates: the viewport transform</h4>
+<p>For a viewport whose lower-left corner is (x<sub>0</sub>, y<sub>0</sub>), width W and height H:</p>
+<div class="eq">x<sub>window</sub> = x<sub>0</sub> + ((x<sub>ndc</sub> + 1) / 2) · W &nbsp;&nbsp; y<sub>window</sub> = y<sub>0</sub> + ((y<sub>ndc</sub> + 1) / 2) · H &nbsp;&nbsp; z<sub>window</sub> = (z<sub>ndc</sub> + 1) / 2</div>
+<p>Read it as: shift −1…1 to 0…2, halve to 0…1, then stretch to the window size. Depth goes from −1…1 to 0…1 (what the depth buffer stores).</p>
+<div class="box ex"><span class="tag ex">Worked example</span> Clip coords (2, 1, 3, 4). Inside? |2|, |1|, |3| are all ≤ 4, yes. NDC = (2/4, 1/4, 3/4) = (0.5, 0.25, 0.75). Viewport at (0,0), 800×600: x = (1.5/2)·800 = <b>600</b>, y = (1.25/2)·600 = <b>375</b>, z = 1.75/2 = <b>0.875</b>.</div>
+<div class="demo" id="pipeDemo">
+<b>Try it: follow one point down the pipeline</b>
+<div class="ctl">
+<label>eye x <input type="number" step="0.5" value="1" id="pdx" style="width:64px"></label>
+<label>eye y <input type="number" step="0.5" value="0.5" id="pdy" style="width:64px"></label>
+<label>eye z <input type="number" step="0.5" value="-5" id="pdz" style="width:64px"></label>
+<label>fovy° <input type="number" value="60" id="pdf" style="width:56px"></label>
+<label>near <input type="number" step="0.1" value="1" id="pdn" style="width:56px"></label>
+<label>far <input type="number" value="20" id="pdfar" style="width:56px"></label>
+<label>W×H <input type="number" value="800" id="pdw" style="width:64px">×<input type="number" value="600" id="pdh" style="width:64px"></label>
+</div>
+<div class="read" id="pdOut"></div>
+<p style="font-size:14px;margin:8px 0 0">Uses the standard perspective matrix (same as <code>mat4.perspective</code>). Try moving z further away (−10, −19) and watch NDC x and y shrink; try z = −25 and it gets clipped by the far plane.</p>
+</div>
+</section>
+
+<section class="note"><h3>Meshes and indexed face sets</h3>
+<p>Since OpenGL only draws points, lines and triangles, curved or complex shapes are approximated by a <b>polygonal mesh</b>: lots of flat faces (polygons) joined at shared edges and vertices.</p>
+<p>An <b>indexed face set (IFS)</b> stores a mesh as two lists:</p>
+<ul>
+<li>a <b>vertex list</b>: every vertex's coordinates, once each. Vertex number N's x is at index 3N, y at 3N+1, z at 3N+2;</li>
+<li>a <b>face list</b>: each face as the vertex <b>numbers</b> going around it in order. Faces can have different sizes, so each one ends with <b>−1</b>.</li>
+</ul>
+<pre><code>int vertexCount = 10;
+double vertexData[] = { 2,-1,2,  2,-1,-2,  2,1,-2,  2,1,2,  1.5,1.5,0,
+                       -1.5,1.5,0,  -2,-1,2,  -2,1,2,  -2,1,-2,  -2,-1,-2 };
+int faceCount = 9;
+int faceData[] = { 0,1,2,3,-1,  3,2,4,-1,  7,3,4,5,-1,  2,8,5,4,-1,  5,8,7,-1,
+                   0,3,7,6,-1,  0,6,9,1,-1,  2,1,9,8,-1,  6,7,8,9,-1 };</code></pre>
+<p>Reading it: face <code>0,1,2,3,-1</code> is a quad using vertices 0, 1, 2 and 3. Vertex 2 is at <code>vertexData[6..8]</code> = (2, 1, −2). Vertex 2 is shared by four faces but stored only once. That's the point of an IFS.</p>
+<p>Faces are logical polygons. To draw them with <code>GL_TRIANGLES</code> they are split into triangles, fan-style from the first vertex: quad (0,1,2,3) becomes (0,1,2) and (0,2,3).</p>
+</section>
+
+<section class="note"><h3 id="s-drawarrays">glDrawArrays, explained</h3>
+<p>You flagged this one. The idea: instead of one function call per vertex, you give OpenGL a whole array and say "draw these as triangles". It takes three steps.</p>
+<h4>Step 1: tell OpenGL where the data is</h4>
+<pre><code>void glVertexPointer(int size, int type, int stride, void* array);</code></pre>
+<div class="tablewrap"><table>
+<tr><th>Parameter</th><th>Meaning</th><th>Typical</th></tr>
+<tr><td><code>size</code></td><td>How many numbers make <b>one</b> vertex: 2 for (x,y), 3 for (x,y,z)</td><td>3</td></tr>
+<tr><td><code>type</code></td><td>The type of each number</td><td><code>GL_FLOAT</code></td></tr>
+<tr><td><code>stride</code></td><td>Bytes from the start of one vertex to the start of the next. <b>0 means tightly packed</b> (nothing in between)</td><td>0</td></tr>
+<tr><td><code>array</code></td><td>Pointer to the data</td><td><code>vertices</code></td></tr>
+</table></div>
+<p><code>glColorPointer(size, type, stride, array)</code> works exactly the same way for colours (size 3 for RGB, 4 for RGBA).</p>
+<h4>Step 2: switch those arrays on</h4>
+<pre><code>glEnableClientState(GL_VERTEX_ARRAY);   <span class="c">// "use the vertex pointer when drawing"</span>
+glEnableClientState(GL_COLOR_ARRAY);    <span class="c">// "use the colour pointer too" (if you set one)</span></code></pre>
+<h4>Step 3: draw</h4>
+<pre><code>void glDrawArrays(int primitiveType, int firstVertex, int vertexCount);</code></pre>
+<p>OpenGL walks through the arrays <b>in order</b>, starting at vertex number <code>firstVertex</code>, taking <code>vertexCount</code> vertices, and feeds them to the primitive type exactly as if you had called <code>glVertex</code> for each one between <code>glBegin</code> and <code>glEnd</code>.</p>
+<div class="box ex"><span class="tag ex">Worked example</span>
+<pre><code>GLfloat vertices[] = {  0.0f, 1.0f, 0.0f,     <span class="c">// vertex 0 (top)</span>
+                       -1.0f,-1.0f, 0.0f,     <span class="c">// vertex 1 (bottom left)</span>
+                        1.0f,-1.0f, 0.0f };   <span class="c">// vertex 2 (bottom right)</span>
+glEnableClientState(GL_VERTEX_ARRAY);
+glVertexPointer(3, GL_FLOAT, 0, vertices);   <span class="c">// 3 floats per vertex, packed</span>
+glDrawArrays(GL_TRIANGLES, 0, 3);            <span class="c">// start at vertex 0, use 3 vertices = 1 triangle</span>
+glDisableClientState(GL_VERTEX_ARRAY);</code></pre>
+"Vertex count" is the number of <b>vertices</b>, not the number of floats (3, not 9) and not the number of triangles. <code>glDrawArrays(GL_TRIANGLES, 3, 6)</code> would skip the first 3 vertices and draw two triangles from vertices 3–8.</div>
+<p><b>The catch:</b> every vertex is used once, in order. A cube has 8 corners but 12 triangles × 3 = <b>36 vertices</b>, so with <code>glDrawArrays</code> each corner is written out about 4–6 times. That's what <code>glDrawElements</code> fixes.</p>
+</section>
+
+<section class="note"><h3>glDrawElements, explained</h3>
+<p>Store each vertex <b>once</b>, then give a separate <b>index array</b> that says which vertices to use, in which order. It's an indexed face set handed straight to OpenGL.</p>
+<pre><code>void glDrawElements(int primitiveType, int count, int indexType, void* indices);</code></pre>
+<div class="tablewrap"><table>
+<tr><th>Parameter</th><th>Meaning</th></tr>
+<tr><td><code>primitiveType</code></td><td>e.g. <code>GL_TRIANGLES</code></td></tr>
+<tr><td><code>count</code></td><td>How many <b>indices</b> to read (36 for a cube of triangles)</td></tr>
+<tr><td><code>indexType</code></td><td>Type of each index: <code>GL_UNSIGNED_BYTE</code>, <code>GL_UNSIGNED_SHORT</code> or <code>GL_UNSIGNED_INT</code> (8, 16 or 32 bits)</td></tr>
+<tr><td><code>indices</code></td><td>The index array</td></tr>
+</table></div>
+<pre><code>float vertexCoords[24] = {  1,1,1,   1,1,-1,   1,-1,-1,   1,-1,1,     <span class="c">// vertices 0-3 (x = +1 side)</span>
+                           -1,1,1,  -1,1,-1,  -1,-1,-1,  -1,-1,1 };   <span class="c">// vertices 4-7 (x = -1 side)</span>
+float vertexColors[24] = {  1,1,1,   1,0,0,   1,1,0,   0,1,0,         <span class="c">// one RGB per vertex</span>
+                            0,0,1,   1,0,1,   0,0,0,   0,1,1 };
+GLuint elementArray[36] = { 0,1,2, 0,2,3,   0,3,7, 0,7,4,   0,4,5, 0,5,1,
+                            6,2,1, 6,1,5,   6,5,4, 6,4,7,   6,7,3, 6,3,2 };
+glVertexPointer(3, GL_FLOAT, 0, vertexCoords);
+glColorPointer (3, GL_FLOAT, 0, vertexColors);
+glEnableClientState(GL_VERTEX_ARRAY);
+glEnableClientState(GL_COLOR_ARRAY);
+glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, elementArray);</code></pre>
+<div class="box ex"><span class="tag ex">Walk-through</span> OpenGL reads indices three at a time. First triangle <code>0,1,2</code>: vertex 0 = (1,1,1) white, vertex 1 = (1,1,−1) red, vertex 2 = (1,−1,−1) yellow. Second <code>0,2,3</code> reuses 0 and 2 and adds vertex 3 = (1,−1,1) green. Together they make the whole x = +1 face. Each index pulls the <b>whole vertex record</b>: position <i>and</i> colour (and normal, if enabled).</div>
+<div class="tablewrap"><table>
+<tr><th></th><th>glDrawArrays</th><th>glDrawElements</th></tr>
+<tr><td>Vertices used</td><td>In array order, each once</td><td>In index order, can repeat</td></tr>
+<tr><td>Cube data</td><td>36 vertices × 3 = 108 floats</td><td>8 vertices × 3 = 24 floats + 36 indices</td></tr>
+<tr><td>Count means</td><td>Number of vertices</td><td>Number of indices</td></tr>
+<tr><td>Best for</td><td>Simple shapes, strips, fans, nothing shared</td><td>Meshes where many triangles share vertices</td></tr>
+</table></div>
+<div class="box idea"><span class="tag idea">Watch out</span> Because an index picks a whole record, a vertex can only have <b>one</b> colour and <b>one</b> normal. A flat-shaded cube needs a different normal for each face at the same corner, so it needs 24 vertices (4 per face), not 8. Shared vertices only work where the attributes really are shared, such as a smooth sphere.</div>
+<div class="box"><span class="tag extra">Beyond the slides</span> In WebGL (your labs) the same two calls are <code>gl.drawArrays(gl.TRIANGLES, first, count)</code> and <code>gl.drawElements(gl.TRIANGLES, count, gl.UNSIGNED_SHORT, 0)</code>. The data lives in buffers instead of client arrays: vertices in an <code>ARRAY_BUFFER</code>, indices in an <code>ELEMENT_ARRAY_BUFFER</code> (that's why the last argument is a byte offset, 0). WebGL 1 indices are normally <code>Uint16Array</code> / <code>UNSIGNED_SHORT</code>.</div>
+</section>
+
+<section id="cheat">
+<h2 class="part">Cheat sheet</h2>
+<button class="printbtn" id="printCheat" type="button">Print just the cheat sheet</button>
+<div class="cheat">
+<div class="card"><h4>GLUT skeleton</h4><pre><code>glutInit(&amp;argc, argv);
+glutInitDisplayMode(GLUT_DOUBLE|GLUT_RGB|GLUT_DEPTH);
+glutInitWindowSize(800,600);
+glutCreateWindow("title");
+glutDisplayFunc(display);  <span class="c">// redraw</span>
+glutReshapeFunc(reshape);  <span class="c">// resize</span>
+glutIdleFunc(idle);        <span class="c">// animate</span>
+glutMainLoop();</code></pre></div>
+<div class="card"><h4>Primitives (n vertices)</h4><ul>
+<li><code>POINTS</code> n · <code>LINES</code> n/2 · <code>LINE_STRIP</code> n−1 · <code>LINE_LOOP</code> n</li>
+<li><code>TRIANGLES</code> n/3</li>
+<li><code>TRIANGLE_STRIP</code> n−2: new vertex + previous two</li>
+<li><code>TRIANGLE_FAN</code> n−2: new vertex + previous + first</li>
+<li>Round points: <code>glEnable(GL_POINT_SMOOTH)</code>; size <code>glPointSize</code></li></ul></div>
+<div class="card"><h4>Colour</h4><ul>
+<li>RGBA. <code>glColor*f</code>: 0.0–1.0 · <code>glColor*ub</code>: 0–255</li>
+<li>Alpha 0 = invisible, 1 = opaque (smooth scale)</li>
+<li>Colour is state; each vertex takes the current colour</li>
+<li><code>glClearColor(r,g,b,a)</code> sets · <code>glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)</code> clears</li></ul></div>
+<div class="card"><h4>Depth test</h4><ul>
+<li>Per-pixel depth buffer, cleared to 1.0 (far)</li>
+<li>New fragment closer (smaller depth)? draw + store. Else discard</li>
+<li>Off by default: <code>glEnable(GL_DEPTH_TEST)</code></li>
+<li>Painter's algorithm = back-to-front; fails on intersections, cycles, moving camera</li>
+<li>Z-fighting fixes: more depth bits · near far out, far close in · <code>glPolygonOffset</code></li></ul></div>
+<div class="card"><h4>Transforms</h4><ul>
+<li><code>glTranslatef(dx,dy,dz)</code> · <code>glScalef(sx,sy,sz)</code> · <code>glRotatef(deg, ax,ay,az)</code></li>
+<li>Apply to things drawn after; <b>last written = first applied</b></li>
+<li><code>glLoadIdentity</code> reset · <code>glPushMatrix</code> save · <code>glPopMatrix</code> restore</li>
+<li>Right-handed: +z towards viewer; camera looks down −z</li></ul></div>
+<div class="card"><h4>Pipeline</h4><p style="margin:0">Object <b>–M→</b> World <b>–V→</b> Eye <b>–P→</b> Clip <b>–÷w→</b> NDC <b>–viewport→</b> Window</p><ul>
+<li><span class="math">p<sub>clip</sub> = P·V·M·p</span> (ModelView = V·M)</li>
+<li>Inside clip: −w ≤ x,y,z ≤ w</li>
+<li>NDC = (x/w, y/w, z/w), all in [−1,1]</li>
+<li>x<sub>win</sub> = x<sub>0</sub> + (x<sub>ndc</sub>+1)/2 · W</li>
+<li>y<sub>win</sub> = y<sub>0</sub> + (y<sub>ndc</sub>+1)/2 · H · z<sub>win</sub> = (z<sub>ndc</sub>+1)/2</li></ul></div>
+<div class="card"><h4>Projection</h4><ul>
+<li>Perspective: <code>glFrustum(l,r,b,t,n,f)</code>, view volume = frustum, far = smaller</li>
+<li>Orthographic: <code>glOrtho(l,r,b,t,n,f)</code>, view volume = box, w = 1</li>
+<li><code>glMatrixMode(GL_PROJECTION); glLoadIdentity(); …; glMatrixMode(GL_MODELVIEW);</code></li></ul></div>
+<div class="card"><h4>IFS</h4><ul>
+<li>Vertex list (each once) + face list (indices, −1 ends a face)</li>
+<li>Vertex N at <code>data[3N..3N+2]</code></li>
+<li>Quad (a,b,c,d) → triangles (a,b,c), (a,c,d)</li></ul></div>
+<div class="card"><h4>Drawing arrays</h4><pre><code>glVertexPointer(size, GL_FLOAT, stride, arr);
+glColorPointer (size, GL_FLOAT, stride, arr);
+glEnableClientState(GL_VERTEX_ARRAY);
+glEnableClientState(GL_COLOR_ARRAY);
+glDrawArrays(mode, firstVertex, vertexCount);
+glDrawElements(mode, indexCount,
+               GL_UNSIGNED_INT, indices);</code></pre><ul>
+<li>stride 0 = tightly packed</li>
+<li>Elements: index picks the whole vertex record; different normals at a corner need separate vertices</li></ul></div>
+</div>
+</section>
+
+<h2 class="part" id="quiz-part">Quiz</h2>
+<p>Pick an answer to see instantly whether you're right and why. Options are shuffled each time.</p>
+<div class="qbar"><span class="score" id="qScore"></span><span class="meter"><i id="qMeter"></i></span>
+<button id="qMissed" type="button">Retry missed</button><button id="qShuffle" type="button">Shuffle</button><button id="qReset" type="button">Reset</button></div>
+<div id="quiz"></div>
+<footer>Built from your own notes, corrected and filled in against the course book (Branden Ingram, CGV lecture notes, Wits). Boxes marked <span class="tag fix">Fixed</span> correct something in the original notes; <span class="tag extra">Beyond the slides</span> marks useful extras that are not in the lecture slides.</footer>
+</main></div>
+<script>window.QUIZ=[
+{t:'GLUT',q:'Which GLUT call registers the function that runs every time the window has to be redrawn?',o:['<code>glutDisplayFunc</code>','<code>glutIdleFunc</code>','<code>glutReshapeFunc</code>','<code>glutMainLoop</code>'],a:0,e:'<code>glutDisplayFunc(display)</code> registers the redraw callback. Idle is for background work/animation, reshape is for window resizes, and <code>glutMainLoop</code> runs the event loop that calls them.'},
+{t:'GLUT',q:'What does <code>GLUT_DOUBLE</code> in <code>glutInitDisplayMode</code> give you?',o:['Double buffering: draw on a hidden back buffer, then swap, so there is no flicker','Double-precision floats for coordinates','Two windows','A depth buffer with twice the bits'],a:0,e:'Double buffering draws the next frame off-screen and swaps it in all at once, so you never see a half-drawn frame.'},
+{t:'Primitives',q:'You pass 6 vertices to <code>GL_TRIANGLE_STRIP</code>. How many triangles are drawn?',o:['4','2','6','3'],a:0,e:'A strip makes n − 2 triangles: 6 − 2 = 4. (<code>GL_TRIANGLES</code> would give 6/3 = 2.)'},
+{t:'Primitives',q:'In a <code>GL_TRIANGLE_FAN</code>, each new vertex forms a triangle with…',o:['the previous vertex and the first vertex','the two previous vertices','the next two vertices','nothing; fans draw lines'],a:0,e:'Fan: new vertex + previous vertex + the shared first vertex (the centre of the fan). "Two previous vertices" is the rule for a strip.'},
+{t:'Primitives',q:'How do you draw a circle in OpenGL 1.1?',o:['Approximate it with a <code>GL_LINE_LOOP</code> (or fan) through many points on the circle','Use <code>GL_CIRCLE</code>','Use <code>glPointSize</code> with a huge point','Use <code>GL_POLYGON_SMOOTH</code>'],a:0,e:'There is no circle primitive. You place, say, 64 points at angles 2πi/64 and join them with a line loop.'},
+{t:'Colour',q:'A colour has alpha = 0.3. What does that mean?',o:['Mostly transparent (30% opaque), if blending is on','Fully transparent, because it is below 0.5','Fully opaque, because it is above 0','It is an invalid alpha'],a:0,e:'Alpha is a continuous scale from 0 (invisible) to 1 (opaque). There is no 0.5 cut-off.'},
+{t:'Colour',q:'<code>glColor3ub(255, 128, 0)</code> is the same colour as…',o:['<code>glColor3f(1.0, 0.5, 0.0)</code>','<code>glColor3f(255, 128, 0)</code>','<code>glColor3f(0.0, 0.5, 1.0)</code>','<code>glColor4f(1, 0.5, 0, 0)</code>'],a:0,e:'<code>ub</code> uses 0–255, <code>f</code> uses 0–1. 255→1.0, 128→≈0.5, 0→0. The last option also has alpha 0, which is invisible.'},
+{t:'Clearing',q:'What does <code>glClearColor(0,0,1,1)</code> do on its own?',o:['It sets the colour that a later <code>glClear</code> will fill with; nothing is cleared yet','It clears the screen to blue','It clears the depth buffer','It sets the drawing colour for the next triangle'],a:0,e:'<code>glClearColor</code> only stores the clear colour. <code>glClear(GL_COLOR_BUFFER_BIT | …)</code> does the clearing.'},
+{t:'Depth',q:'Depth buffer is cleared to 1.0. You draw a fragment at depth 0.7, then another at 0.9, then another at 0.4 on the same pixel. Which colour is shown?',o:['The one at 0.4','The one at 0.9','The one at 0.7','The last one drawn, whatever its depth'],a:0,e:'0.7 passes (less than 1.0), 0.9 fails (more than 0.7), 0.4 passes (less than 0.7). Smallest depth = closest = shown.'},
+{t:'Depth',q:'Your 3D scene draws far objects on top of near ones. What did you most likely forget?',o:['<code>glEnable(GL_DEPTH_TEST)</code>','<code>glEnable(GL_LIGHTING)</code>','<code>glPushMatrix()</code>','<code>glutMainLoop()</code>'],a:0,e:'The depth test is off by default, so objects just paint over each other in drawing order.'},
+{t:'Depth',q:'Which situation breaks the painter\'s algorithm?',o:['Two objects that intersect each other','Two objects far apart','A single convex object','Drawing in black and white'],a:0,e:'If two objects intersect, neither is entirely behind the other, so no back-to-front order is correct. Cycles of overlap and a moving camera cause trouble too.'},
+{t:'Depth',q:'Which is a fix for z-fighting?',o:['Move the near plane further out and the far plane closer in','Move the near plane as close to 0 as possible','Turn off the depth test','Use GL_TRIANGLE_FAN'],a:0,e:'Depth precision is spread between near and far; a tiny near value wastes most of it. Also: more depth bits, or <code>glPolygonOffset</code> for coplanar surfaces.'},
+{t:'Transforms',q:'<pre><code>glTranslatef(5,0,0);\nglRotatef(90,0,0,1);\ndrawPoint(1,0,0);</code></pre>Where does the point end up?',o:['(5, 1, 0)','(0, 6, 0)','(6, 0, 0)','(5, −1, 0)'],a:0,e:'Transforms apply in reverse code order. Rotate first: (1,0,0) → (0,1,0). Then translate: (5,1,0). (0,6,0) is what you get if the lines are swapped.'},
+{t:'Transforms',q:'<code>glScalef(-1, 1, 1)</code> does what?',o:['Mirrors through the yz-plane (x becomes −x)','Shrinks the object to nothing','Rotates 180° about x','Mirrors through the xy-plane'],a:0,e:'Only x is negated, so the reflection is across the plane x = 0, which is the yz-plane.'},
+{t:'Transforms',q:'Why wrap a wheel\'s transforms in <code>glPushMatrix()</code> / <code>glPopMatrix()</code>?',o:['So the wheel\'s translate/rotate don\'t affect what is drawn after it','To make the wheel draw faster','To switch to the projection matrix','To enable the depth test for the wheel'],a:0,e:'Push saves the current (car body) transform; pop restores it, so the next wheel starts from the body\'s frame, not from the first wheel\'s.'},
+{t:'Pipeline',q:'Put the coordinate spaces in order.',o:['Object → World → Eye → Clip → NDC → Window','Object → Eye → World → Clip → NDC → Window','World → Object → Eye → NDC → Clip → Window','Object → World → Clip → Eye → NDC → Window'],a:0,e:'M takes object to world, V world to eye, P eye to clip, ÷w clip to NDC, viewport NDC to window.'},
+{t:'Pipeline',q:'Clip coordinates are (3, −1, 2, 4). What are the NDC?',o:['(0.75, −0.25, 0.5)','(12, −4, 8)','(3, −1, 2)','It is clipped'],a:0,e:'Divide by w = 4: (3/4, −1/4, 2/4). It is inside because |3|, |−1|, |2| are all ≤ 4.'},
+{t:'Pipeline',q:'NDC x = 0 in a viewport with x<sub>0</sub> = 0 and W = 800. What is x<sub>window</sub>?',o:['400','0','800','−400'],a:0,e:'x = 0 + (0 + 1)/2 · 800 = 400. NDC 0 is always the middle of the viewport.'},
+{t:'Pipeline',q:'Why does a perspective projection make far objects look smaller?',o:['w<sub>c</sub> grows with distance, and the perspective divide shrinks x and y by w','The far plane scales them down','The viewport transform uses depth','The depth test hides part of them'],a:0,e:'After projection, w<sub>c</sub> is basically the distance from the camera. Dividing by a bigger w gives smaller NDC. Orthographic has w = 1, so no shrinking.'},
+{t:'Pipeline',q:'Which projection keeps object size the same no matter how far away it is?',o:['Orthographic (<code>glOrtho</code>)','Perspective (<code>glFrustum</code>)','Both','Neither'],a:0,e:'Orthographic has a box-shaped view volume and w = 1, so there is no foreshortening.'},
+{t:'Meshes',q:'In an IFS face list <code>0,1,2,3,-1, 3,2,4,-1</code>, what does <code>-1</code> mean?',o:['End of the current face','Vertex number −1','Reverse the winding','Skip the next vertex'],a:0,e:'Faces can have different numbers of vertices, so −1 marks where each face ends. The first face is a quad, the second a triangle.'},
+{t:'Meshes',q:'Where is vertex number 4\'s z-coordinate in a flat <code>vertexData</code> array (3 numbers per vertex)?',o:['<code>vertexData[14]</code>','<code>vertexData[4]</code>','<code>vertexData[12]</code>','<code>vertexData[7]</code>'],a:0,e:'Vertex N starts at 3N. 3·4 = 12 is x, 13 is y, 14 is z.'},
+{t:'DrawArrays',q:'<code>glDrawArrays(GL_TRIANGLES, 3, 6)</code> draws…',o:['2 triangles from vertices 3 to 8','6 triangles starting at vertex 3','3 triangles from vertices 0 to 5','1 triangle from floats 3 to 6'],a:0,e:'firstVertex = 3, vertexCount = 6 → vertices 3,4,5,6,7,8 → 6/3 = 2 triangles. Counts are in vertices, not floats.'},
+{t:'DrawArrays',q:'In <code>glVertexPointer(3, GL_FLOAT, 0, data)</code>, what does the <code>0</code> mean?',o:['Stride 0: the vertices are tightly packed one after another','Start at vertex 0','Use 0 vertices','Data is on the GPU'],a:0,e:'Stride is the byte distance between consecutive vertices; 0 tells OpenGL to work it out as "packed with no gaps".'},
+{t:'DrawElements',q:'A cube is drawn with <code>glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, idx)</code> and 8 vertices. What is 36?',o:['The number of indices (12 triangles × 3)','The number of vertices','The number of floats in the vertex array','The number of faces'],a:0,e:'<code>count</code> in drawElements is how many indices to read. 6 faces × 2 triangles × 3 = 36.'},
+{t:'DrawElements',q:'Why does a flat-shaded cube need 24 vertices even with <code>glDrawElements</code>?',o:['An index selects the whole vertex record, so a corner can\'t have three different face normals unless it is stored three times','Because drawElements can\'t reuse vertices','Because indices must be unique','Because GL_UNSIGNED_BYTE only goes to 24'],a:0,e:'Each corner touches 3 faces with 3 different normals. One vertex record has one normal, so you need 3 copies per corner: 8 × 3 = 24.'}
+];
+</script>
+<script>(function(){
+  // theme toggle
+  var root=document.documentElement, KEY='cgv-theme';
+  try{var saved=localStorage.getItem(KEY); if(saved) root.setAttribute('data-theme',saved);}catch(e){}
+  var tb=document.getElementById('themeBtn');
+  if(tb) tb.onclick=function(){
+    var dark=root.getAttribute('data-theme')==='dark'||(!root.getAttribute('data-theme')&&matchMedia('(prefers-color-scheme: dark)').matches);
+    var next=dark?'light':'dark'; root.setAttribute('data-theme',next);
+    try{localStorage.setItem(KEY,next);}catch(e){}
+  };
+
+  // table of contents
+  var toc=document.getElementById('toc');
+  if(toc){
+    var html='';
+    document.querySelectorAll('main h2.part, main section.note > h3').forEach(function(h,i){
+      if(!h.id) h.id='s'+i;
+      if(h.tagName==='H2') html+='<b><a href="#'+h.id+'" style="border:0;padding:0;color:inherit">'+h.textContent+'</a></b>';
+      else html+='<a href="#'+h.id+'">'+h.textContent+'</a>';
+    });
+    toc.innerHTML=html;
+  }
+
+  // print just the cheat sheet
+  var pb=document.getElementById('printCheat');
+  if(pb) pb.onclick=function(){document.body.classList.add('print-cheat');window.print();setTimeout(function(){document.body.classList.remove('print-cheat')},500);};
+
+  // quiz
+  var Q=window.QUIZ||[], host=document.getElementById('quiz');
+  if(!host||!Q.length) return;
+  var state=[];
+  function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+  function render(order){
+    host.innerHTML='';
+    order.forEach(function(qi,n){
+      var q=Q[qi], d=document.createElement('div'); d.className='q'; d.dataset.i=qi;
+      var opts=shuffle(q.o.map(function(t,k){return {t:t,k:k};}));
+      d.innerHTML='<div class="qn">Question '+(n+1)+(q.t?' · '+q.t:'')+'</div><div class="qt">'+q.q+'</div><div class="opts"></div><div class="why"></div>';
+      var box=d.querySelector('.opts');
+      opts.forEach(function(o,j){
+        var b=document.createElement('button'); b.className='opt'; b.type='button';
+        b.innerHTML='<span class="k">'+'ABCDEF'[j]+'</span><span>'+o.t+'</span>';
+        b.onclick=function(){answer(d,q,o.k,b)};
+        b.dataset.k=o.k; box.appendChild(b);
+      });
+      host.appendChild(d);
+    });
+    update();
+  }
+  function answer(d,q,k,btn){
+    if(d.classList.contains('done')) return;
+    d.classList.add('done');
+    var ok=k===q.a; state[d.dataset.i]=ok;
+    d.querySelectorAll('.opt').forEach(function(b){b.disabled=true; if(+b.dataset.k===q.a) b.classList.add('right');});
+    if(!ok) btn.classList.add('wrong');
+    d.querySelector('.why').innerHTML=(ok?'<b class="ok">Correct.</b> ':'<b class="no">Not quite.</b> ')+q.e;
+    update();
+  }
+  function update(){
+    var done=0,right=0; Object.keys(state).forEach(function(i){done++; if(state[i]) right++;});
+    document.getElementById('qScore').textContent=right+' / '+Q.length+' correct'+(done<Q.length?' ('+(Q.length-done)+' left)':'');
+    document.getElementById('qMeter').style.width=(100*right/Q.length)+'%';
+  }
+  var base=Q.map(function(_,i){return i;});
+  document.getElementById('qReset').onclick=function(){state=[];render(base);};
+  document.getElementById('qShuffle').onclick=function(){state=[];render(shuffle(base.slice()));};
+  document.getElementById('qMissed').onclick=function(){
+    var missed=base.filter(function(i){return state[i]===false;});
+    if(!missed.length){alert('Nothing missed yet. Answer some questions first, or you got them all right!');return;}
+    missed.forEach(function(i){delete state[i];});
+    var keepRight=base.filter(function(i){return state[i]===true;});
+    render(missed);
+    keepRight.forEach(function(i){state[i]=true;}); update();
+  };
+  render(base);
+})();
+</script>
+<script>(function(){
+  var ids=['pdx','pdy','pdz','pdf','pdn','pdfar','pdw','pdh'], out=document.getElementById('pdOut');
+  if(!out) return;
+  function f(n){return (Math.round(n*1000)/1000).toString();}
+  function run(){
+    var v={}; ids.forEach(function(i){v[i]=parseFloat(document.getElementById(i).value)||0;});
+    var W=v.pdw||1,H=v.pdh||1,aspect=W/H,fy=1/Math.tan(v.pdf*Math.PI/360),n=v.pdn,fa=v.pdfar;
+    var xc=fy/aspect*v.pdx, yc=fy*v.pdy, zc=(fa+n)/(n-fa)*v.pdz+2*fa*n/(n-fa), wc=-v.pdz;
+    var inside=wc>0&&Math.abs(xc)<=wc&&Math.abs(yc)<=wc&&Math.abs(zc)<=wc;
+    var s='Eye    ('+f(v.pdx)+', '+f(v.pdy)+', '+f(v.pdz)+', 1)<br>'+
+          'Clip   ('+f(xc)+', '+f(yc)+', '+f(zc)+', w='+f(wc)+')  &rarr; '+(inside?'<b style="color:var(--good)">inside, kept</b>':'<b style="color:var(--bad)">outside, clipped</b>')+'<br>';
+    if(wc>0){
+      var nx=xc/wc,ny=yc/wc,nz=zc/wc;
+      s+='NDC    ('+f(nx)+', '+f(ny)+', '+f(nz)+')  = clip &divide; '+f(wc)+'<br>';
+      if(inside) s+='Window ('+f((nx+1)/2*W)+' px, '+f((ny+1)/2*H)+' px, depth '+f((nz+1)/2)+')';
+    } else s+='w &le; 0: the point is behind the camera.';
+    out.innerHTML=s;
+  }
+  ids.forEach(function(i){document.getElementById(i).addEventListener('input',run);});
+  run();
+})();
+</script>
+</body></html>
